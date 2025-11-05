@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Herramienta de Plantilla de Datos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for better aesthetics and font */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background for the body (dark blue-gray) */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 15px;
+            box-sizing: border-box;
+            font-size: 0.9rem;
+        }
+        .container {
+            background-color: #2d3748; /* Slightly lighter dark background for the container (dark gray) */
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 15px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 3px;
+            font-weight: 600;
+            color: #e2e8f0; /* Light text for labels (light gray) */
+        }
+        
+        /* --- ESTILOS PARA EL TOGGLE SWITCH --- */
+        .switch-container {
+            gap: 8px; /* Espacio entre los elementos */
+        }
+        .switch-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #a0aec0; /* Color inactivo (gris) */
+            transition: color 0.2s;
+        }
+        .switch-label.active {
+            color: #667eea; /* Color activo (indigo) */
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px; /* Ancho del switch */
+            height: 26px; /* Alto del switch */
+        }
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #4a5568; /* Fondo inactivo */
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px; /* Alto del botón */
+            width: 20px; /* Ancho del botón */
+            left: 3px; /* Posición inicial */
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .switch-slider {
+            background-color: #667eea; /* Fondo activo (indigo) */
+        }
+        input:checked + .switch-slider:before {
+            transform: translateX(24px); /* Movimiento del botón */
+        }
+        
+
+    input[type="text"],
+input[type="number"],
+textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #4a5568;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #f7fafc !important;              /* Texto blanco */
+    background-color: #242b38 !important;   /* Fondo oscuro */
+    -webkit-text-fill-color: #f7fafc !important; /* Fix Chrome/Safari */
+    font-weight: 500;                       /* Mejor contraste */
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* Refuerzo específico para Comentarios y Solución */
+#solicita,
+#solucion {
+    color: #f7fafc !important;
+    background-color: #242b38 !important;
+    -webkit-text-fill-color: #f7fafc !important;
+    font-weight: 500;
+}
+
+
+/* Cambia el color del placeholder (Versión 3 - Anulando conflictos) */
+/* Regla estándar */
+#solicita::placeholder,
+#solucion::placeholder {
+    color: #ef4444 !important; /* Rojo */
+    opacity: 1; 
+}
+/* Regla para WebKit (Chrome, Safari, Edge) */
+#solicita::-webkit-input-placeholder,
+#solucion::-webkit-input-placeholder {
+    color: #ef4444 !important; /* Rojo */
+    -webkit-text-fill-color: initial !important; 
+    opacity: 1;
+}
+/* Regla para Mozilla Firefox */
+#solicita::-moz-placeholder,
+#solucion::-moz-placeholder {
+    color: #ef4444 !important; /* Rojo */
+    opacity: 1;
+}
+
+
+        }
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.4);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        #ts {
+            min-height: 40px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 8px;
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+            border-radius: 4px;
+        }
+        .checkbox-group label {
+            margin-bottom: 0;
+            font-weight: normal;
+            color: #e2e8f0;
+            font-size: 0.85rem;
+        }
+        .output-area {
+            background-color: #1f2937;
+            border: 1px dashed #6b7280;
+            border-radius: 8px;
+            padding: 10px;
+            min-height: 100%;
+            height: 100%;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+            font-size: 0.8rem;
+            color: #f7fafc;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-y: auto;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .action-button {
+            flex: 1;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+        }
+        
+        /* Specific button colors */
+        #copyButton {
+            background-color: #667eea; /* Indigo */
+        }
+        #copyButton:hover {
+            background-color: #5a67d8;
+            transform: translateY(-1px);
+        }
+        #saveButton {
+            background-color: #10b981; /* Green for Save */
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+        }
+        #saveButton:hover {
+            background-color: #059669;
+        }
+        #clearButton {
+            background-color: #ef4444; /* Red for Clear */
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+        #clearButton:hover {
+            background-color: #dc2626;
+        }
+        #downloadHistoryButton {
+            background-color: #f59e0b; /* Amber for Download */
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+        }
+        #downloadHistoryButton:hover {
+            background-color: #d97706;
+        }
+        #clearHistoryButton { /* Estilo para el nuevo botón de borrar historial */
+            background-color: #dc2626; /* Rojo para borrar */
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.1s;
+            margin-top: 10px;
+            width: 100%;
+        }
+        #clearHistoryButton:hover {
+            background-color: #b91c1c;
+        }
+
+        /* AJUSTE PARA MOSTRAR SOLO 2 FILAS EN EL HISTORIAL */
+        #historyList {
+            list-style: none;
+            padding: 0;
+            margin-top: 10px;
+            max-height: 65px; 
+            overflow-y: auto;
+            border: 1px solid #4a5568;
+            border-radius: 4px;
+        }
+        /* ESTILO DEL INPUT BUSCADOR */
+        #historySearch {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #667eea; 
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #e2e8f0;
+            background-color: #242b38;
+            margin-bottom: 10px;
+        }
+
+        /* Estilo para el contador */
+        #caseCount {
+            font-size: 1rem;
+            font-weight: 600;
+            /* El color base se quita para dar paso a los colores internos */
+            margin-left: 10px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: #f7fafc;
+            margin-bottom: 15px;
+        }
+        h2 {
+            font-size: 1.25rem;
+            color: #f7fafc;
+            margin-bottom: 10px;
+        }
+        #ejecutivo {
+             background-color: #242b38 !important; 
+             color: #f7fafc !important; 
+             cursor: text !important;
+        }
+
+        /* History specific styles */
+        .history-column {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #1f2937;
+            border-radius: 8px;
+        }
+        
+        #historyList li {
+            padding: 6px 10px;
+            border-bottom: 1px solid #4a5568;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #a0aec0;
+            transition: background-color 0.1s;
+            display: flex; 
+            justify-content: space-between;
+            align-items: center;
+        }
+        #historyList li:last-child {
+            border-bottom: none;
+        }
+        #historyList li:hover {
+            background-color: #374151;
+        }
+        #historyList li.selected {
+            background-color: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        
+        /* Estilo del botón de copia rápida */
+        .copy-quick-button {
+            background-color: #4a5568; 
+            color: #e2e8f0;
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            line-height: 1;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.1s;
+            margin-left: 10px;
+        }
+        .copy-quick-button:hover {
+            background-color: #667eea; 
+        }
+        .copy-quick-button.success {
+            background-color: #10b981; 
+        }
+
+
+        .file-status {
+            font-size: 0.8rem;
+            color: #a0aec0;
+            margin-bottom: 10px;
+        }
+        
+        /* --- ESTILOS PARA RESPUESTAS RÁPIDAS (MODIFICADOS) --- */
+        .quick-response-module {
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        
+        /* ▼▼▼ CAMBIO CSS: Flexbox para alinear label y botón "Administrar" ▼▼▼ */
+        .quick-response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px; /* Separación del buscador */
+        }
+        
+        #manageResponsesButton {
+            background-color: #4a5568; /* Gris */
+            color: #e2e8f0;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #manageResponsesButton:hover {
+            background-color: #667eea; /* Indigo */
+        }
+        
+
+        #quickResponseSearch {
+            width: 100%;
+            padding: 5px 8px; 
+            border: 1px solid #4a5568; 
+            border-radius: 8px;
+            font-size: 0.8rem; 
+            color: #e2e8f0;
+            background-color: #242b38;
+            margin-bottom: 5px;
+        }
+        #quickResponseSearch:focus {
+             border-color: #667eea; 
+        }
+
+        #quickResponseList {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 60px; /* Altura para 2 items (aprox 30px * 2) */
+            overflow-y: auto;
+            border: 1px solid #4a5568;
+            border-radius: 4px;
+        }
+        #quickResponseList li {
+            padding: 8px 10px;
+            border-bottom: 1px solid #4a5568;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #a0aec0;
+            transition: background-color 0.1s;
+        }
+        #quickResponseList li:last-child {
+            border-bottom: none;
+        }
+        #quickResponseList li:hover {
+            background-color: #374151;
+            color: white;
+        }
+        
+        /* --- ESTILOS PARA EL OVERLAY DEL GIF --- */
+        #gifOverlay {
+            display: none; /* Oculto por defecto */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(26, 32, 44, 0.85); /* Fondo oscuro semi-transparente */
+            justify-content: center;
+            align-items: center;
+            z-index: 9998; 
+            cursor: pointer; /* Para indicar que se puede cerrar */
+        }
+        #gifOverlay.showing {
+            display: flex; /* Se muestra con flex */
+        }
+        #gifOverlay img {
+            max-width: 80%;
+            max-height: 80vh;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* --- ESTILOS PARA EL BOTÓN "A TRABAJAR" --- */
+        #workButton {
+            background-color: #7e22ce; /* Morado (Tailwind purple-600) */
+            color: white;
+            padding: 4px 10px; /* Pequeño */
+            font-size: 0.8rem; /* Pequeño */
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            box-shadow: none; /* Sin sombra */
+            
+            display: block;
+            width: -moz-fit-content;
+            width: fit-content;
+            margin-left: auto; /* Alineado a la derecha */
+            margin-right: 0;
+            margin-bottom: 10px; /* Espacio antes del 'Archivo TXT...' */
+        }
+        #workButton:hover {
+            background-color: #9333ea; /* Morado más claro (purple-500) */
+        }
+
+
+        /* --- ▼▼▼ CAMBIO CSS: NUEVOS ESTILOS PARA EL MODAL DEL EDITOR ▼▼▼ --- */
+        #responseEditorOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(26, 32, 44, 0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+        #responseEditorOverlay.showing {
+            display: flex;
+        }
+        .modal-content {
+            background-color: #2d3748;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-content h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #f7fafc;
+            margin-bottom: 15px;
+        }
+        
+        /* Lista de respuestas en el editor */
+        #editorListContainer {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 15px 0;
+            overflow-y: auto; /* Scroll si hay muchas respuestas */
+            flex-grow: 1; /* Ocupa el espacio disponible */
+            background-color: #1f2937;
+            border: 1px solid #4a5568;
+            border-radius: 8px;
+        }
+        #editorListContainer li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #4a5568;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+        }
+        #editorListContainer li:last-child {
+            border-bottom: none;
+        }
+        #editorListContainer li span {
+            margin-right: 10px;
+            word-break: break-word; /* Evita que el texto se desborde */
+        }
+        
+        .delete-response-btn {
+            background-color: #ef4444; /* Rojo */
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-weight: 700;
+            font-family: 'Arial', sans-serif;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            flex-shrink: 0; /* Evita que el botón se encoja */
+        }
+        .delete-response-btn:hover {
+            background-color: #dc2626; /* Rojo oscuro */
+        }
+        
+        /* Área para añadir nuevas respuestas */
+        .add-response-area {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        #newResponseInput {
+            flex-grow: 1; /* Ocupa el espacio */
+        }
+        #addResponseButton {
+            background-color: #10b981; /* Verde */
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            white-space: nowrap; /* Evita que el texto se parta */
+        }
+        #addResponseButton:hover {
+            background-color: #059669;
+        }
+        
+        #closeEditorButton {
+            background-color: #667eea; /* Indigo */
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 15px;
+        }
+        #closeEditorButton:hover {
+            background-color: #5a67d8;
+        }
+        /* --- ▲▲▲ FIN DE ESTILOS CSS --- */
+
+
+        /* Responsive adjustments */
+        @media (min-width: 768px) {
+            .main-content-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            }
+            .output-column {
+                display: flex;
+                flex-direction: column;
+            }
+            .output-area {
+                flex-grow: 1;
+            }
+            .button-group {
+                grid-template-columns: repeat(4, 1fr);
+                display: grid; 
+            }
+        }
+        @media (max-width: 767px) {
+            .button-group {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="font-bold mb-6 text-center">Herramienta de Plantilla de Datos</h1>
+        
+        <button id="workButton">¡A trabajar!</button>
+        <div class="flex justify-between items-center mb-4">
+            <div class="file-status mb-0">
+                Archivo TXT simulado: <span id="fileNameDisplay">generador de CN.txt</span>
+            </div>
+            
+            <div class="switch-container flex items-center">
+                <span id="soporteLabel" class="switch-label active">Soporte</span>
+                <label class="switch">
+                    <input type="checkbox" id="modeToggle">
+                    <span class="switch-slider"></span>
+                </label>
+                <span id="servicioLabel" class="switch-label">Servicio</span>
+            </div>
+        </div>
+
+
+        <div class="history-column">
+            <h2 class="text-lg font-bold mb-2 flex items-center">
+                Historial de Casos:
+                <span id="caseCount" class="ml-2">(Total: 0)</span>
+            </h2>
+            <input type="text" id="historySearch" placeholder="Buscar por Caso ID o Contrato/Tel" oninput="filterHistory()">
+            <ul id="historyList">
+                <li class="text-center py-2 text-gray-400">El historial se cargará al iniciar.</li>
+            </ul>
+            <button id="clearHistoryButton" class="action-button">Borrar Historial</button>
+        </div>
+        
+        <div class="main-content-grid">
+            <div class="input-column">
+                <div class="form-group">
+  <label for="ejecutivo">Ejecutivo:</label>
+  <input type="text" id="ejecutivo" placeholder="Ingrese el nombre del ejecutivo">
+</div>
+            <div class="form-group">
+  <label for="canal">Canal:</label>
+  <input type="text" id="canal" value="social media/WhatsApp">
+</div>
+                <div class="form-group">
+                    <label for="id">Caso ID (9 dígitos):</label>
+                    <input type="number" id="id" placeholder="Ingrese el Caso ID (ej. 633794759)" pattern="\d{9}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="contratoTelInput">Contrato/Tel (8 dígitos):</label>
+                    <input type="number" id="contratoTelInput" placeholder="Ingrese Contrato/Tel (ej. 50621267)" pattern="\d{8}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="contactoInput">Contacto:</label>
+                    <input type="text" id="contactoInput" placeholder="Ingrese Contacto">
+                </div>
+
+                <div class="form-group">
+                    <label for="solicita">Comentarios (Solicitud del Cliente):</label> 
+                    <textarea id="solicita" placeholder="Describa la solicitud/comentario principal del cliente"></textarea>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="ctaActiva">
+                    <label for="ctaActiva">Cta activa</label>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="perfilTsCheckbox">
+                    <label for="perfilTsCheckbox">Perfil TS</label>
+                </div>
+                
+                <div class="form-group flex items-center mb-4">
+                    <div class="checkbox-group flex-shrink-0 mr-3">
+                        <input type="checkbox" id="saldoCheckbox"> 
+                        <label for="saldoCheckbox">Saldo:</label>
+                    </div>
+                    <input type="text" id="saldoText" class="flex-grow">
+                </div>
+
+                <div class="form-group flex items-center mb-4">
+                    <div class="checkbox-group flex-shrink-0 mr-3">
+                        <input type="checkbox" id="fgCheckbox" checked>
+                        <label for="fgCheckbox">FG:</label>
+                    </div>
+                    <input type="text" id="fgText" class="flex-grow">
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="itemsSerFac">
+                    <label for="itemsSerFac">Items de ser/fac:</label>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="equipoCmCheckbox">
+                    <label for="equipoCmCheckbox">Equipo CM/eMTA:</label>
+                </div>
+
+                <div class="quick-response-module">
+                    <div class="quick-response-header">
+                        <label for="quickResponseSearch" class="mb-0">Respuestas Rápidas:</label>
+                        <button id="manageResponsesButton" title="Administrar respuestas">⚙️ Administrar</button>
+                    </div>
+                    <input type="text" id="quickResponseSearch" placeholder="Buscar respuesta...">
+                    <ul id="quickResponseList">
+                        </ul>
+                </div>
+                <div class="form-group">
+                    <label for="solucion">Solución:</label>
+                    <textarea id="solucion" placeholder="Describa la solución/resolución"></textarea>
+                </div>
+                
+            </div>
+
+            <div class="output-column">
+                <h2 class="font-bold mb-4">Plantilla Compilada:</h2>
+                <textarea id="outputArea" class="output-area" readonly></textarea>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button id="saveButton" class="action-button">Guardar Caso</button>
+            <button id="downloadHistoryButton" class="action-button">Descargar Historial TXT</button>
+            <button id="copyButton" class="action-button">Copiar Salida Compilada</button>
+            <button id="clearButton" class="action-button clear-button">Limpiar Formulario</button>
+        </div>
+    </div>
+
+    <div id="gifOverlay">
+        <img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExdGlzOXRhM2xuNXlsOTk5bXBlOHZ1eDdieTIybmZyZjN0ZzA1YTFudyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oriO0o3mjqifL7wK4/giphy.gif" alt="Confused GIF">
+    </div>
+
+    <div id="responseEditorOverlay">
+        <div class="modal-content">
+            <h3>Administrar Respuestas Rápidas</h3>
+            
+            <ul id="editorListContainer">
+                </ul>
+            
+            <div class="add-response-area">
+                <input type="text" id="newResponseInput" placeholder="Escriba una nueva respuesta rápida...">
+                <button id="addResponseButton">Añadir</button>
+            </div>
+            
+            <button id="closeEditorButton">Cerrar y Guardar</button>
+        </div>
+    </div>
+    <script>
+        // --- Global State and Constants ---
+        const STORAGE_KEY = 'cn_jahc_simulated_cases';
+        let caseHistory = []; // Stores the array of case objects
+        const simulatedFileName = 'generador de CN.txt'; 
+        
+        // ▼▼▼ CAMBIO JAVASCRIPT: Lógica de Respuestas Rápidas ▼▼▼
+        const QUICK_RESPONSES_KEY = 'cn_jahc_quick_responses';
+        let quickResponses = []; // Array global, se carga desde localStorage
+        
+        // Estas se usarán SOLO la primera vez que el usuario abra la app
+        const DEFAULT_QUICK_RESPONSES = [
+            "Se valida que el cliente presenta una falla general. Se solicita tiempo de espera mientras se restablece el servicio.",
+            "Se valida que el cliente continúa presentando la falla. Se le solicita tiempo de espera",
+            "Se valida que el cliente presenta saldo pendiente. Se brinda el monto correspondiente ($____) y la referencia de pago (____)",
+            "Se solicita al cliente realizar un reinicio físico del módem y enviar foto de la etiqueta MAC. Posteriormente, se realiza sondeo.",
+            "Después del reinicio físico, se solicita al TT realizar un reset de valores. Se efectúa nuevo sondeo",
+            "Después del TS, el cliente continúa con el módem en estado 'Other'. Se solicitan los datos para generar orden de servicio (OS).",
+            "Se valida que existe una visita programada con orden de servicio. Se solicita tiempo de espera al cliente.",
+            "TT solicita los pasos para cancelación. Se transfiere la llamada/chat al área correspondiente.",
+            "Se canaliza el caso al área de Izzi Móvil",
+            "Se canaliza el caso al área de cambio de domicilio",
+            "TT actualiza la CURP. Favor de no volver a solicitarla"
+        ];
+        // --- ▲▲▲ FIN DEL CAMBIO ▲▲▲ ---
+
+
+        // --- DOM Element References ---
+        const ejecutivoInput = document.getElementById('ejecutivo');
+        const canalInput = document.getElementById('canal');
+        const idInput = document.getElementById('id');
+        const contratoTelInput = document.getElementById('contratoTelInput');
+        const contactoInput = document.getElementById('contactoInput');
+        const solicitaTextarea = document.getElementById('solicita'); 
+        const ctaActivaCheckbox = document.getElementById('ctaActiva');
+        const saldoCheckbox = document.getElementById('saldoCheckbox');
+        const saldoTextInput = document.getElementById('saldoText');
+        const fgCheckbox = document.getElementById('fgCheckbox');
+        const fgTextInput = document.getElementById('fgText');
+        const itemsSerFacCheckbox = document.getElementById('itemsSerFac');
+        const equipoCmCheckbox = document.getElementById('equipoCmCheckbox');
+        const solucionTextarea = document.getElementById('solucion');
+        const outputArea = document.getElementById('outputArea');
+        const copyButton = document.getElementById('copyButton');
+        const clearButton = document.getElementById('clearButton');
+        const saveButton = document.getElementById('saveButton');
+        const downloadHistoryButton = document.getElementById('downloadHistoryButton');
+        const historyList = document.getElementById('historyList');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const clearHistoryButton = document.getElementById('clearHistoryButton'); 
+        const historySearchInput = document.getElementById('historySearch');
+        const caseCountSpan = document.getElementById('caseCount');
+        
+        const modeToggle = document.getElementById('modeToggle');
+        const servicioLabel = document.getElementById('servicioLabel');
+        const soporteLabel = document.getElementById('soporteLabel');
+        
+        const perfilTsCheckbox = document.getElementById('perfilTsCheckbox');
+        const perfilTsGroup = perfilTsCheckbox.parentElement;
+        const equipoCmGroup = equipoCmCheckbox.parentElement;
+        
+        const quickResponseSearch = document.getElementById('quickResponseSearch');
+        const quickResponseList = document.getElementById('quickResponseList');
+
+        const gifOverlay = document.getElementById('gifOverlay');
+        const workButton = document.getElementById('workButton');
+
+        // ▼▼▼ CAMBIO JAVASCRIPT: Nuevas referencias para el Modal Editor ▼▼▼
+        const manageResponsesButton = document.getElementById('manageResponsesButton');
+        const responseEditorOverlay = document.getElementById('responseEditorOverlay');
+        const editorListContainer = document.getElementById('editorListContainer');
+        const newResponseInput = document.getElementById('newResponseInput');
+        const addResponseButton = document.getElementById('addResponseButton');
+        const closeEditorButton = document.getElementById('closeEditorButton');
+        // --- ▲▲▲ FIN DEL CAMBIO ▲▲▲ ---
+
+
+        // --- Core Logic Functions ---
+        
+        /**
+         * Maneja el cambio del interruptor de modo (Soporte / Servicio).
+         */
+        function handleModeToggle(triggerUpdate = true) {
+            const isServicioMode = modeToggle.checked; 
+
+            if (isServicioMode) {
+                // MODO SERVICIO
+                perfilTsGroup.style.display = 'none';
+                equipoCmGroup.style.display = 'none';
+                ctaActivaCheckbox.checked = true;
+                saldoCheckbox.checked = true;
+                itemsSerFacCheckbox.checked = true;
+                fgCheckbox.checked = false;
+                servicioLabel.classList.add('active');
+                soporteLabel.classList.remove('active');
+            } else {
+                // MODO SOPORTE
+                perfilTsGroup.style.display = 'flex';
+                equipoCmGroup.style.display = 'flex';
+                ctaActivaCheckbox.checked = true;
+                saldoCheckbox.checked = true;
+                fgCheckbox.checked = false;
+                equipoCmCheckbox.checked = false;
+                itemsSerFacCheckbox.checked = false;
+                perfilTsCheckbox.checked = false; 
+                servicioLabel.classList.remove('active');
+                soporteLabel.classList.add('active');
+            }
+            
+            handleSaldoChange(false); 
+            handleFgChange(false);
+            
+            if (triggerUpdate) {
+                updateOutput();
+            }
+        }
+
+        // --- ▼▼▼ CAMBIO JAVASCRIPT: Nuevas funciones para el Editor de Respuestas ▼▼▼
+
+        /**
+         * Carga las respuestas rápidas desde localStorage o usa los defaults.
+         */
+        function loadQuickResponses() {
+            const storedResponses = localStorage.getItem(QUICK_RESPONSES_KEY);
+            if (storedResponses) {
+                quickResponses = JSON.parse(storedResponses);
+            } else {
+                // Si no hay nada guardado, usa la lista de defaults
+                quickResponses = [...DEFAULT_QUICK_RESPONSES];
+                saveQuickResponses(); // Y guárdala para la próxima vez
+            }
+        }
+
+        /**
+         * Guarda el array 'quickResponses' actual en localStorage.
+         */
+        function saveQuickResponses() {
+            localStorage.setItem(QUICK_RESPONSES_KEY, JSON.stringify(quickResponses));
+        }
+        
+        /**
+         * Puebla la lista de respuestas rápidas (la principal, con buscador).
+         * Ahora lee del array global 'quickResponses'.
+         */
+        function renderQuickResponses() {
+            quickResponseList.innerHTML = ''; // Limpiar
+            quickResponses.forEach(text => {
+                const li = document.createElement('li');
+                li.textContent = text;
+                li.addEventListener('click', () => insertQuickResponse(text));
+                quickResponseList.appendChild(li);
+            });
+        }
+        
+        /**
+         * Puebla la lista de respuestas en el MODAL DEL EDITOR.
+         */
+        function renderEditorList() {
+            editorListContainer.innerHTML = '';
+            quickResponses.forEach((text, index) => {
+                const li = document.createElement('li');
+                
+                const textSpan = document.createElement('span');
+                textSpan.textContent = text;
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'X';
+                deleteBtn.classList.add('delete-response-btn');
+                deleteBtn.title = 'Borrar esta respuesta';
+                deleteBtn.onclick = () => deleteQuickResponse(index);
+                
+                li.appendChild(textSpan);
+                li.appendChild(deleteBtn);
+                editorListContainer.appendChild(li);
+            });
+        }
+        
+        /**
+         * Abre el modal del editor.
+         */
+        function openResponseEditor() {
+            renderEditorList(); // Dibuja la lista actualizada
+            responseEditorOverlay.classList.add('showing');
+        }
+
+        /**
+         * Cierra el modal del editor y actualiza la lista principal.
+         */
+        function closeResponseEditor() {
+            responseEditorOverlay.classList.remove('showing');
+            renderQuickResponses(); // Actualiza la lista principal
+            filterQuickResponses(); // Resetea el filtro de la lista principal
+        }
+        
+        /**
+         * Añade una nueva respuesta desde el modal.
+         */
+        function addQuickResponse() {
+            const newText = newResponseInput.value.trim();
+            if (newText) {
+                quickResponses.push(newText);
+                saveQuickResponses();   // Guarda en localStorage
+                renderEditorList();     // Actualiza la lista del modal
+                newResponseInput.value = ''; // Limpia el input
+            }
+        }
+        
+        /**
+         * Borra una respuesta por su índice.
+         */
+        function deleteQuickResponse(index) {
+            if (confirm("¿Seguro que quieres borrar esta respuesta rápida?")) {
+                quickResponses.splice(index, 1); // Quita del array
+                saveQuickResponses();    // Guarda en localStorage
+                renderEditorList();      // Actualiza la lista del modal
+            }
+        }
+        
+        // --- ▲▲▲ FIN DE NUEVAS FUNCIONES ▲▲▲ ---
+
+
+        /**
+         * Inserta el texto de la respuesta rápida en el área de Solución.
+         */
+        function insertQuickResponse(text) {
+            const currentSolucion = solucionTextarea.value.trim();
+            solucionTextarea.value = (currentSolucion ? currentSolucion + '\n' : '') + text;
+            updateOutput();
+            solucionTextarea.focus();
+        }
+
+        /**
+         * Filtra la lista de respuestas rápidas basado en el buscador.
+         */
+        function filterQuickResponses() {
+            const searchTerm = quickResponseSearch.value.trim().toLowerCase();
+            const listItems = quickResponseList.getElementsByTagName('li');
+
+            Array.from(listItems).forEach(item => {
+                const itemText = item.textContent.toLowerCase();
+                if (itemText.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+
+        /**
+         * Generates and sets the dynamic file name CN_JAHC_(Fecha).txt.
+         */
+        function setupFileName() {
+            fileNameDisplay.textContent = simulatedFileName;
+        }
+
+        /**
+         * Saves the current caseHistory array to localStorage.
+         */
+        function saveHistoryToSimulatedFile() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(caseHistory));
+            } catch (e) {
+                console.error("Error al guardar el historial simulado en localStorage:", e);
+                showTemporaryMessage('Error: No se pudo guardar el historial localmente.', '#EF4444');
+            }
+        }
+
+        /**
+         * Loads the case history from localStorage and updates the global array.
+         */
+        function loadHistoryFromSimulatedFile() {
+            try {
+                const storedData = localStorage.getItem(STORAGE_KEY);
+                caseHistory = storedData ? JSON.parse(storedData) : [];
+                renderHistory();
+            } catch (e) {
+                console.error("Error al cargar el historial simulado:", e);
+                caseHistory = [];
+                renderHistory();
+            }
+        }
+
+        /**
+         * Creates a serializable object from the current form state.
+         * @returns {object|null} An object containing all form data, or null if ID is missing or validation fails.
+         */
+        function getCaseDataFromForm() {
+            const id = idInput.value.trim();
+            const contratoTel = contratoTelInput.value.trim();
+            
+            if (!/^\d{9}$/.test(id)) {
+                showTemporaryMessage('Error: El Caso ID debe ser un número exacto de 9 dígitos.', '#EF4444');
+                idInput.focus();
+                return null;
+            }
+
+            if (!/^\d{8}$/.test(contratoTel)) {
+                showTemporaryMessage('Error: Contrato/Tel debe ser un número exacto de 8 dígitos.', '#EF4444');
+                contratoTelInput.focus();
+                return null;
+            }
+
+
+            return {
+                id: id,
+                ejecutivo: ejecutivoInput.value,
+                canal: canalInput.value,
+                contratoTel: contratoTelInput.value.trim(),
+                contacto: contactoInput.value.trim(),
+                solicita: solicitaTextarea.value.trim(),
+                ctaActiva: ctaActivaCheckbox.checked,
+                saldoChecked: saldoCheckbox.checked,
+                saldoText: saldoTextInput.value.trim(),
+                fgChecked: fgCheckbox.checked,
+                fgText: fgTextInput.value.trim(),
+                itemsSerFac: itemsSerFacCheckbox.checked,
+                equipoCm: equipoCmCheckbox.checked,
+                solucion: solucionTextarea.value.trim(),
+                perfilTs: perfilTsCheckbox.checked, 
+                timestamp: new Date().toISOString(), 
+            };
+        }
+
+        /**
+         * Populates the form fields with data from a selected case.
+         * @param {object} data The case data object.
+         */
+        function loadCaseDataToForm(data) {
+            const isServicioCase = (data.perfilTs === undefined && data.equipoCm === undefined);
+            
+            modeToggle.checked = isServicioCase;
+            
+            handleModeToggle(false);
+
+            idInput.value = data.id || '';
+            contratoTelInput.value = data.contratoTel || '';
+            contactoInput.value = data.contacto || '';
+            ejecutivoInput.value = data.ejecutivo || '';
+            canalInput.value = data.canal || '';
+            solicitaTextarea.value = data.solicita || '';
+            solucionTextarea.value = data.solucion || '';
+
+            ctaActivaCheckbox.checked = data.ctaActiva !== undefined ? data.ctaActiva : false;
+            itemsSerFacCheckbox.checked = data.itemsSerFac !== undefined ? data.itemsSerFac : false;
+            
+            saldoCheckbox.checked = data.saldoChecked !== undefined ? data.saldoChecked : false;
+            saldoTextInput.value = data.saldoText || '';
+            
+            fgCheckbox.checked = data.fgChecked !== undefined ? data.fgChecked : true; 
+            fgTextInput.value = data.fgText || '';
+
+            if (!isServicioCase) {
+                equipoCmCheckbox.checked = data.equipoCm !== undefined ? data.equipoCm : false;
+                perfilTsCheckbox.checked = data.perfilTs !== undefined ? data.perfilTs : false; 
+            }
+
+            handleSaldoChange(false); 
+            handleFgChange(false); 
+
+            updateOutput(); 
+        }
+
+        /**
+         * Saves the current caseHistory array to localStorage.
+         */
+        function saveTemplate() {
+            const newCase = getCaseDataFromForm();
+            if (!newCase) {
+                return;
+            }
+
+            if (modeToggle.checked) {
+                delete newCase.perfilTs;
+                delete newCase.equipoCm;
+            }
+
+            const existingIndex = caseHistory.findIndex(c => c.id === newCase.id);
+
+            if (existingIndex !== -1) {
+                caseHistory[existingIndex] = newCase;
+                showTemporaryMessage(`Caso [ID: ${newCase.id}] modificado exitosamente.`, '#667eea');
+            } else {
+                caseHistory.push(newCase);
+                showTemporaryMessage(`Caso [ID: ${newCase.id}] guardado exitosamente.`, '#10B981');
+            }
+
+            saveHistoryToSimulatedFile(); 
+            renderHistory(); 
+        }
+        
+        /**
+         * Renders the history list based on the global caseHistory array.
+         */
+        function renderHistory() {
+            historyList.innerHTML = '';
+            
+            const total = caseHistory.length;
+            let soporteCount = 0;
+            let servicioCount = 0;
+
+            caseHistory.forEach(caso => {
+                if (caso.perfilTs !== undefined) {
+                    soporteCount++;
+                } else {
+                    servicioCount++;
+                }
+            });
+
+            caseCountSpan.innerHTML = `
+                (<span style="color: #10b981;">Total: ${total}</span> | 
+                 <span style="color: #667eea;">Soporte: ${soporteCount}</span> | 
+                 <span style="color: #f59e0b;">Servicio: ${servicioCount}</span>)
+            `;
+            
+            
+            if (caseHistory.length === 0) {
+                historyList.innerHTML = '<li class="text-center py-2 text-gray-400">No hay casos guardados aún. Use el botón "Guardar Caso".</li>';
+                return;
+            }
+
+            caseHistory.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            if (historySearchInput) {
+                 historySearchInput.value = '';
+            }
+
+            caseHistory.forEach((caseData) => {
+                const li = document.createElement('li');
+                
+                let dateDisplay = 'Sin fecha';
+                try {
+                    const dateObj = new Date(caseData.timestamp);
+                    dateDisplay = dateObj.toLocaleTimeString('es-ES', { 
+                        year: 'numeric', month: '2-digit', day: '2-digit', 
+                        hour: '2-digit', minute: '2-digit', second: '2-digit'
+                    });
+                } catch (e) {
+                    dateDisplay = 'Fecha inválida';
+                }
+                
+                const copyBtn = document.createElement('button');
+                copyBtn.textContent = '📋 Copiar'; 
+                copyBtn.classList.add('copy-quick-button');
+                
+                copyBtn.addEventListener('click', (event) => {
+                    event.stopPropagation(); 
+                    copyCaseTemplateToClipboard(caseData, copyBtn);
+                });
+
+                const textSpan = document.createElement('span');
+                textSpan.textContent = `[ID: ${caseData.id}] - ${dateDisplay}`;
+
+                li.appendChild(textSpan);
+                li.appendChild(copyBtn);
+                
+                li.addEventListener('dblclick', () => {
+                    historyList.querySelectorAll('li').forEach(item => item.classList.remove('selected'));
+                    li.classList.add('selected');
+                    loadCaseDataToForm(caseData);
+                });
+                
+                li.dataset.search = `${caseData.id} ${caseData.contratoTel} ${dateDisplay}`.toLowerCase();
+                
+                historyList.appendChild(li);
+            });
+        }
+        
+        /**
+         * Filtra los elementos del historial por ID o Contrato/Tel.
+         */
+        function filterHistory() {
+            const searchTerm = historySearchInput.value.trim().toLowerCase();
+            const listItems = historyList.getElementsByTagName('li');
+
+            Array.from(listItems).forEach(item => {
+                const searchData = item.dataset.search;
+                if (!searchTerm || (searchData && searchData.includes(searchTerm))) {
+                    item.style.display = 'flex'; 
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+        
+        /**
+         * Borra todo el historial de casos.
+         */
+        function clearCaseHistory() {
+            if (confirm("¿Estás seguro de que deseas ELIMINAR todo el historial de casos? Esta acción es permanente.")) {
+                caseHistory = [];
+                localStorage.removeItem(STORAGE_KEY);
+                renderHistory();
+                showTemporaryMessage('Historial borrado exitosamente.', '#dc2626');
+            }
+        }
+
+        /**
+         * Copia la plantilla de un caso guardado al portapapeles.
+         */
+        async function copyCaseTemplateToClipboard(data, button) {
+            
+            const compiledText = buildTemplateText(data);
+
+            try {
+                await navigator.clipboard.writeText(compiledText);
+                
+                const originalText = button.textContent;
+                button.textContent = '¡Copiado!';
+                button.classList.add('success');
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('success');
+                }, 1500);
+
+            } catch (err) {
+                console.error("Error al copiar el texto:", err);
+                const originalText = button.textContent;
+                button.textContent = 'Error';
+                button.style.backgroundColor = '#EF4444';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.backgroundColor = '';
+                }, 1500);
+            }
+        }
+
+
+        /**
+         * Muestra un mensaje temporal en un botón.
+         */
+        function showTemporaryMessage(msg, color) {
+            const originalButtonText = saveButton.textContent;
+            const originalBgColor = saveButton.style.backgroundColor;
+            
+            saveButton.textContent = msg;
+            saveButton.style.backgroundColor = color;
+
+            setTimeout(() => {
+                saveButton.textContent = originalButtonText;
+                saveButton.style.backgroundColor = originalBgColor;
+            }, 2000);
+        }
+
+        /**
+         * Descarga el historial de casos como un archivo TXT.
+         */
+        function downloadCaseHistoryAsTxt() {
+            if (caseHistory.length === 0) {
+                if (this.id === 'downloadHistoryButton') {
+                    showTemporaryMessage('Historial vacío, nada que descargar.', '#EF4444');
+                }
+                return;
+            }
+            
+            const separator = "=".repeat(80);
+            let content = `ARCHIVO DE HISTORIAL SIMULADO - ${simulatedFileName}\n`; 
+            content += `${separator}\n\n`;
+
+            caseHistory.forEach((data, index) => {
+                let dateDisplay = 'Fecha desconocida';
+                try {
+                    const dateObj = new Date(data.timestamp);
+                    dateDisplay = dateObj.toLocaleString('es-ES');
+                } catch (e) { /* ignore */ }
+                
+                const caseTemplate = buildTemplateText(data);
+
+                const caseContent = 
+`--- CASO GUARDADO ${index + 1} - ID: ${data.id} | FECHA: ${dateDisplay} ---
+${caseTemplate}`; 
+
+                content += caseContent + `\n\n` + `${separator}\n\n`;
+            });
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = simulatedFileName;
+
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            if (this.id === 'downloadHistoryButton') {
+                const originalButtonText = downloadHistoryButton.textContent;
+                const originalBgColor = downloadHistoryButton.style.backgroundColor;
+                downloadHistoryButton.textContent = '¡Descargado!';
+                downloadHistoryButton.style.backgroundColor = '#10B981';
+                
+                setTimeout(() => {
+                    downloadHistoryButton.textContent = originalButtonText;
+                    downloadHistoryButton.style.backgroundColor = originalBgColor;
+                }, 1500);
+            }
+        }
+        
+        
+        /**
+         * Genera el texto de la plantilla basado en un objeto de datos del caso.
+         */
+        function buildTemplateText(data) {
+            const id = data.id || '';
+            const contratoTel = data.contratoTel || ''; 
+            const contacto = data.contacto || '';       
+            const comentariosCliente = data.solicita || ''; 
+            const solucion = data.solucion || '';
+            const ejecutivo = data.ejecutivo || '';
+            const canal = data.canal || 'social media/WhatsApp';
+            
+            let saldoStatus;
+            if (data.saldoChecked) {
+                saldoStatus = 'ok';
+            } else {
+                saldoStatus = data.saldoText || 'no';
+            }
+
+            const ctaActivaStatus = data.ctaActiva ? 'ok' : 'no';
+            const itemsStatus = data.itemsSerFac ? 'ok' : 'no';
+            
+            let equipoCmStatus = '';
+            if (data.equipoCm !== undefined) {
+                 equipoCmStatus = data.equipoCm ? 'operational' : 'other';
+            }
+            
+            let fgStatus;
+            if (data.fgChecked) {
+                if (data.fgText && data.fgText !== 'OK') {
+                    fgStatus = `si, ${data.fgText}`;
+                } else {
+                    fgStatus = 'si ';
+                }
+            } else {
+                fgStatus = 'no por el momento';
+            }
+            
+            let perfilTsStatus = '';
+            if (data.perfilTs !== undefined) {
+                perfilTsStatus = data.perfilTs ? 'ok todo bien' : 'no , peligroso';
+            }
+
+            
+            let template = `Nombre: ${ejecutivo}
+Caso ID:   \t${id}
+Área: \t\t${canal}
+Contrato/Tel: \t${contratoTel}
+Contacto: \t${contacto}
+Comentarios:  \t${comentariosCliente}
+Solucion: \t${solucion}`;
+
+            if (perfilTsStatus) {
+                template += `\n• Perfil TS : \t\t${perfilTsStatus}`;
+            }
+            template += `\n• Saldo al corriente : \t${saldoStatus}`;
+            template += `\n• Cuenta activa : \t${ctaActivaStatus}`;
+            template += `\n• ítems de servicio activos: \t${itemsStatus}`;
+            if (equipoCmStatus) {
+                template += `\n• Equipo CM/eMTA : \t${equipoCmStatus}`;
+            }
+            template += `\n• Sin falla general : \t${fgStatus}`;
+            
+            return template;
+        }
+
+
+        /**
+         * Actualiza el área de texto de la plantilla principal.
+         */
+        function updateOutput() {
+            const currentData = {
+                ejecutivo: ejecutivoInput.value,
+                id: idInput.value.trim() || '',
+                canal: canalInput.value,
+                contratoTel: contratoTelInput.value.trim() || '',
+                contacto: contactoInput.value.trim() || '',
+                solicita: solicitaTextarea.value.trim() || '',
+                solucion: solucionTextarea.value.trim() || '',
+                
+                ctaActiva: ctaActivaCheckbox.checked,
+                itemsSerFac: itemsSerFacCheckbox.checked,
+                
+                saldoChecked: saldoCheckbox.checked,
+                saldoText: saldoTextInput.value.trim(),
+                
+                fgChecked: fgCheckbox.checked,
+                fgText: fgTextInput.value.trim(),
+            };
+            
+            if (!modeToggle.checked) {
+                currentData.equipoCm = equipoCmCheckbox.checked;
+                currentData.perfilTs = perfilTsCheckbox.checked;
+            }
+
+            outputArea.value = buildTemplateText(currentData);
+        }
+
+
+        /**
+         * Maneja el estado del input de Saldo.
+         */
+        function handleSaldoChange(triggerUpdate = true) {
+            if (saldoCheckbox.checked) {
+                saldoTextInput.disabled = true;
+                saldoTextInput.value = 'ok';
+            } else {
+                saldoTextInput.disabled = false;
+                if (saldoTextInput.value === 'ok') saldoTextInput.value = 'no , debe '; 
+                else if (saldoTextInput.value === 'OK') saldoTextInput.value = '';
+            }
+            if (triggerUpdate) updateOutput();
+        }
+
+        /**
+         * Maneja el estado del input de Falla General.
+         */
+        function handleFgChange(triggerUpdate = true) {
+            if (fgCheckbox.checked) {
+                fgTextInput.disabled = false;
+                if (fgTextInput.value === 'OK') fgTextInput.value = '';
+            } else {
+                fgTextInput.disabled = true;
+                fgTextInput.value = 'OK';
+            }
+            if (triggerUpdate) updateOutput();
+        }
+
+        /**
+         * Copia la plantilla principal al portapapeles.
+         */
+        function copyToClipboard() {
+            const textToCopy = outputArea.value;
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const originalButtonText = copyButton.textContent;
+                copyButton.textContent = '¡Copiado!';
+                copyButton.style.backgroundColor = '#10B981';
+
+                setTimeout(() => {
+                    copyButton.textContent = originalButtonText;
+                    copyButton.style.backgroundColor = '#667eea';
+                }, 1500);
+            }).catch(err => {
+                console.error('Error al copiar al portapapeles:', err);
+                const originalButtonText = copyButton.textContent;
+                copyButton.textContent = 'Error al copiar';
+                copyButton.style.backgroundColor = '#EF4444';
+                setTimeout(() => {
+                    copyButton.textContent = originalButtonText;
+                    copyButton.style.backgroundColor = '#667eea';
+                }, 1500);
+            });
+        }
+
+        
+        
+        /**
+         * Limpia todos los campos del formulario.
+         */
+        function clearForm() {
+            idInput.value = '';
+            contratoTelInput.value = ''; 
+            contactoInput.value = '';    
+            solicitaTextarea.value = '';
+            solucionTextarea.value = '';
+            
+            fgTextInput.value = '';
+
+            historyList.querySelectorAll('li').forEach(li => li.classList.remove('selected'));
+
+            handleModeToggle();
+        }
+
+        /**
+         * Maneja el input del ID: actualiza la salida y busca/autocarga el caso.
+         */
+        function handleIdInput() {
+            updateOutput();
+            
+            const idToFind = idInput.value.trim();
+            
+            if (/^\d{9}$/.test(idToFind)) {
+                const foundCase = caseHistory.find(c => c.id === idToFind);
+                
+                if (foundCase) {
+                    loadCaseDataToForm(foundCase);
+                    
+                    historyList.querySelectorAll('li').forEach(item => {
+                        item.classList.remove('selected');
+                        if (item.dataset.search && item.dataset.search.startsWith(idToFind)) {
+                            item.classList.add('selected');
+                        }
+                    });
+                }
+            }
+        }
+
+        
+        // --- Event Listeners and Initialization ---
+        
+        idInput.addEventListener('input', handleIdInput); 
+        contratoTelInput.addEventListener('input', updateOutput); 
+        contactoInput.addEventListener('input', updateOutput);    
+        solicitaTextarea.addEventListener('input', updateOutput); 
+        ctaActivaCheckbox.addEventListener('change', updateOutput);
+        itemsSerFacCheckbox.addEventListener('change', updateOutput);
+        equipoCmCheckbox.addEventListener('change', updateOutput); 
+        solucionTextarea.addEventListener('input', updateOutput); 
+
+        saldoCheckbox.addEventListener('change', () => handleSaldoChange());
+        saldoTextInput.addEventListener('input', updateOutput);
+        fgCheckbox.addEventListener('change', () => handleFgChange());
+        fgTextInput.addEventListener('input', updateOutput);
+        ejecutivoInput.addEventListener('input', updateOutput);
+        canalInput.addEventListener('input', updateOutput);
+        
+        modeToggle.addEventListener('change', handleModeToggle);
+        perfilTsCheckbox.addEventListener('change', updateOutput);
+        quickResponseSearch.addEventListener('input', filterQuickResponses); 
+
+        saveButton.addEventListener('click', saveTemplate);
+        downloadHistoryButton.addEventListener('click', downloadCaseHistoryAsTxt);
+        clearHistoryButton.addEventListener('click', clearCaseHistory);
+        historySearchInput.addEventListener('input', filterHistory);
+        copyButton.addEventListener('click', copyToClipboard);
+        clearButton.addEventListener('click', clearForm);
+
+        gifOverlay.addEventListener('click', () => {
+            gifOverlay.classList.remove('showing');
+        });
+        workButton.addEventListener('click', () => {
+            gifOverlay.classList.add('showing');
+        });
+
+        // ▼▼▼ CAMBIO JAVASCRIPT: Nuevos listeners para el Modal Editor ▼▼▼
+        manageResponsesButton.addEventListener('click', openResponseEditor);
+        closeEditorButton.addEventListener('click', closeResponseEditor);
+        addResponseButton.addEventListener('click', addQuickResponse);
+        // --- ▲▲▲ FIN DEL CAMBIO ▲▲▲ ---
+
+        // CONFIGURACIÓN DE INICIALIZACIÓN:
+        document.addEventListener('DOMContentLoaded', () => {
+            setupFileName(); 
+            loadHistoryFromSimulatedFile(); 
+            handleModeToggle(); 
+            
+            // ▼▼▼ CAMBIO JAVASCRIPT: Lógica de carga de Respuestas Rápidas ▼▼▼
+            loadQuickResponses(); // Carga desde localStorage (o defaults)
+            renderQuickResponses(); // Dibuja la lista principal
+            // --- ▲▲▲ FIN DEL CAMBIO ▲▲▲ ---
+        });
+        
+        
+        // --- Window Close Simulation ---
+        window.addEventListener('beforeunload', (event) => {
+            const hasUnsavedChanges = idInput.value || contratoTelInput.value || solicitaTextarea.value;
+            
+            if (hasUnsavedChanges) {
+                const confirmationMessage = 'Tienes cambios sin guardar en el formulario. ¿Seguro que quieres salir?';
+                event.returnValue = confirmationMessage; 
+                return confirmationMessage;
+            }
+        });
+
+    </script>
+</body>
+</html>
